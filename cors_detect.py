@@ -9,18 +9,23 @@ parser.add_argument('-s','--start', help="a string for the start date, e.g. 2014
 parser.add_argument('-e','--end', help="a string for the end date, e.g. 2014-10-24", required=True)
 args = vars(parser.parse_args())
 
-sql = "SELECT * FROM table_1_second_cors WHERE (the_geom %26%26 ST_MakeEnvelope({0}, {1}, {2}, {3}))".format(args['minlon'], args['minlat'], args['maxlon'], args['maxlat'])
-url = 'http://raudabaugh.cartodb.com/api/v2/sql?q=' + sql
-r = requests.get(url, auth=('sraudabaugh@gmail.com', 'whiskeynovember'))
+tables = ['table_1_second_cors', 'table_5_second_cors', 'table_15_second_cors']
+stations = set()
 
-data = r.json()
+for table in tables:
+    sql = "SELECT * FROM " + table + " WHERE (the_geom %26%26 ST_MakeEnvelope({0}, {1}, {2}, {3}))".format(args['minlon'], args['minlat'], args['maxlon'], args['maxlat'])
+    url = 'http://raudabaugh.cartodb.com/api/v2/sql?q=' + sql
+    r = requests.get(url, auth=('sraudabaugh@gmail.com', 'whiskeynovember'))
+    data = r.json()
+    for station in data['rows']:
+        stations.add(station['name'])
+
 
 start = datetime.datetime.strptime(args['start'], "%Y-%m-%d").date()
 end = datetime.datetime.strptime(args['end'], "%Y-%m-%d").date()
-
-for station in data['rows']:
-    while start != end + datetime.timedelta(days=1):
-        print 'Downloading rinex for ' + station['name']
+while start != end + datetime.timedelta(days=1):
+    for station in stations:
+        print 'Downloading rinex for ' + station
         # do POST
         url = 'http://geodesy.noaa.gov/UFCORS/ufcors'
         yday_str = "%03d" % (start.timetuple().tm_yday,)
@@ -30,16 +35,16 @@ for station in data['rows']:
                       starttime='00:00',
                       timezone='UTC',
                       duration='24',
-                      siteselection=station['name'],
+                      siteselection=station,
                       epochInterval='As Is',
                       orbits='yes'
                       )
         data = urllib.urlencode(values)
         req = urllib2.Request(url, data)
         rsp = urllib2.urlopen(req)
-        filename = '{0}-{1}-{2}.zip'.format(station['name'],str(start.year),yday_str)
+        filename = '{0}-{1}-{2}.zip'.format(station,str(start.year),yday_str)
         with open(filename, 'wb') as fd:
             fd.write(rsp.read())
         print filename + ' downloaded'
         subprocess.check_call(['./process_zip.sh', filename])
-        start = start + datetime.timedelta(days=1)
+    start = start + datetime.timedelta(days=1)
