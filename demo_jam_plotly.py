@@ -43,13 +43,12 @@ dates = data['date_time'].values
 # plot the jamming metrics
 plt.figure(tight_layout=True)
 plt.subplot(211)
-plt.plot(indicator)
-plt.ylabel('Indicator')
-plt.subplot(212)
 plt.ylabel('Intensity')
 plt.plot(intensity)
-plt.grid()
 plt.title('Developing a jamming intensity and detection metric')
+plt.subplot(212)
+plt.plot(indicator)
+plt.ylabel('Indicator')
 plot_url = py.plot_mpl(plt.gcf())
 #plt.show()
 
@@ -74,8 +73,6 @@ for sv in el_demo_sats:
     svgroup['S1C'].get_group(sv).plot()
     svgroup['ELE'].get_group(sv).plot()
     plt.ylabel('C/N^o dB/Hz')
-    plt.show()
-    plot_idx +=10
 
 # Elevation compensation
 # SVs at low angles have lower C/No 
@@ -92,6 +89,5 @@ for sv in el_demo_sats:
     svgroup['S1C'].get_group(sv).plot()
     svgroup['ELE'].get_group(sv).plot()
     plt.ylabel('C/N^o dB/Hz')
-    plt.show()
     plot_idx +=10
 py.plot_mpl(plt.gcf())
