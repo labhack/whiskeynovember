@@ -1,2 +1,5 @@
 sqlalchemy
 psycopg2
+numpy
+pandas
+requests
