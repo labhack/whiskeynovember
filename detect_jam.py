@@ -67,9 +67,11 @@ sats = np.unique(data['sat'])
 # compute the jamming metrics
 indicator = (data['S1C'].median() - pd.rolling_mean(data['S1C'], 30).values) > 4
 intensity = data['S1C'].median() - pd.rolling_mean(data['S1C'], 30).values
-date = data['date_time'].values
+dates = data['date_time'].values
 
-for idx, record in enumerate(date):
-    obs = get_or_create(session, model.Observation, x=X, y=Y, z=Z, station_name=station, jam_indicator=True if indicator[idx].astype(int) == 1 else False, jam_intensity=intensity[idx], date_time=pd.to_datetime(date[idx]))
+for idx, record in enumerate(dates):
+    print '%r of %r' % (idx, len(dates))
+    date=pd.to_datetime(dates[idx])
+    obs = get_or_create(session, model.Observation, x=X, y=Y, z=Z, station_name=station, jam_indicator=True if indicator[idx].astype(int) == 1 else False, jam_intensity=intensity[idx], date_time=date)
 
 session.commit()
