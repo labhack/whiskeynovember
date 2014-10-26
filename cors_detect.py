@@ -1,4 +1,4 @@
-import argparse, datetime, requests, json, urllib, urllib2
+import argparse, datetime, json, requests, subprocess, urllib, urllib2
 
 parser = argparse.ArgumentParser(description='Detect GPS interference using CORS.')
 parser.add_argument('-minlat', help="minimum latitude of bounding box", required=True)
@@ -31,10 +31,13 @@ for station in data['rows']:
                       duration='24',
                       siteselection=station['name'],
                       epochInterval='As Is',
+                      orbits='yes'
                       )
         data = urllib.urlencode(values)
         req = urllib2.Request(url, data)
         rsp = urllib2.urlopen(req)
-        with open('{0}-{1}.zip'.format(station['name'],yday_str), 'wb') as fd:
+        filename = '{0}-{1}-{2}.zip'.format(station['name'],str(start.year),yday_str)
+        with open(filename, 'wb') as fd:
             fd.write(rsp.read())
+        subprocess.check_call(['./process_zip.sh', filename])
         start = start + datetime.timedelta(days=1)
