@@ -1,15 +1,35 @@
 #/usr/env/bin python
 
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
 # process command line args
-if len (sys.argv) != 2 :
+if len(sys.argv) != 2:
     print "Usage: python detect_jam.py <filename> "
     sys.exit (1)
 filename = sys.argv[1]
+
+# get XYZ and station name out of file
+fid = open(filename, 'r')
+for idx in np.arange(1,7):
+    line = fid.readline()
+temp = line.split()
+if len(temp) > 5:
+    X = temp[3]
+    Y = temp[4]
+    Z = temp[5]
+else:
+    print "cannot get X, Y, Z data"
+    X = []
+    Y = []
+    Z = []
+
+# get the station name
+line = fid.readline()
+temp = line.split()
+station_name = temp[-1][0:4]
+station_name = station_name.upper()
 
 # read the data into a pandas data structure
 try: 
