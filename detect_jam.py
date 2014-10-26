@@ -4,19 +4,9 @@ import pandas as pd
 import numpy as np
 import sys
 import model
-from sqlalchemy.orm import sessionmaker
 from model import engine
-Session = sessionmaker(bind=engine)
-session = Session()
-
-def get_or_create(session, mdl, **kwargs):
-    instance = session.query(mdl).filter_by(**kwargs).first()
-    if instance:
-        return instance
-    else:
-        instance = mdl(**kwargs)
-        session.add(instance)
-        return instance
+from model import table
+conn = engine.connect()
 
 # process command line args
 if len(sys.argv) != 2:
@@ -69,9 +59,19 @@ indicator = (data['S1C'].median() - pd.rolling_mean(data['S1C'], 30).values) > 4
 intensity = data['S1C'].median() - pd.rolling_mean(data['S1C'], 30).values
 dates = data['date_time'].values
 
+vals = []
+print 'Adding record to db...'
 for idx, record in enumerate(dates):
-    print '%r of %r' % (idx, len(dates))
     date=pd.to_datetime(dates[idx])
-    obs = get_or_create(session, model.Observation, x=X, y=Y, z=Z, station_name=station, jam_indicator=True if indicator[idx].astype(int) == 1 else False, jam_intensity=intensity[idx], date_time=date)
+    record_dict = {}
+    record_dict['x']=X
+    record_dict['y']=Y
+    record_dict['z']=Z
+    record_dict['station_name']=station
+    record_dict['jam_indicator']=True if indicator[idx].astype(int) == 1 else False
+    record_dict['jam_intensity']=intensity[idx]
+    record_dict['date_time']=date
+    vals.append(record_dict)
 
-session.commit()
+conn.execute(table.insert(), vals)
+print 'Record successfully added.'

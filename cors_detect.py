@@ -20,6 +20,7 @@ end = datetime.datetime.strptime(args['end'], "%Y-%m-%d").date()
 
 for station in data['rows']:
     while start != end + datetime.timedelta(days=1):
+        print 'Downloading rinex for ' + station['name']
         # do POST
         url = 'http://geodesy.noaa.gov/UFCORS/ufcors'
         yday_str = "%03d" % (start.timetuple().tm_yday,)
@@ -39,5 +40,6 @@ for station in data['rows']:
         filename = '{0}-{1}-{2}.zip'.format(station['name'],str(start.year),yday_str)
         with open(filename, 'wb') as fd:
             fd.write(rsp.read())
+        print filename + ' downloaded'
         subprocess.check_call(['./process_zip.sh', filename])
         start = start + datetime.timedelta(days=1)
